@@ -1,82 +1,109 @@
-# SAM.gov Opportunity Radar – Federal Contract & Bid Alerts
+# SAM.gov Scraper – New Federal Contract Opportunity Alerts
 
-[![Run on Apify](https://img.shields.io/badge/Run%20on-Apify-00a86b)](https://apify.com/cce_partners/samgov-opportunity-radar)
+[![Run on Apify](https://img.shields.io/badge/Run%20on-Apify-blue)](https://apify.com/cce_partners/samgov-opportunity-radar)
 
-**▶ Try it on the Apify Store: https://apify.com/cce_partners/samgov-opportunity-radar**
+👉 **Run it now on Apify: https://apify.com/cce_partners/samgov-opportunity-radar**
 
-SAM.gov Opportunity Radar is a **government contracts monitor** that watches SAM.gov and returns only the **new or changed** U.S. federal contract opportunities on each run. You get clean, flat, spreadsheet-ready rows, with no duplicates and no personal contact data.
+A **SAM.gov scraper and RFP alert tool** that returns only **new or amended federal contract opportunities** (solicitations, presolicitations, sources sought, combined synopses and awards) matching your NAICS codes, set-asides, agency and state.
 
-Use it as a no-code **SAM.gov API alternative**. It calls the official SAM.gov Opportunities API with your own free key and handles paging, deduplication, change detection, and flattening for you. Schedule it daily and you have **federal contract opportunity alerts** you can send to Google Sheets, Slack, Zapier, Make, n8n, or any webhook.
+**No API key needed.** By default it reads SAM.gov's keyless official public nightly extract (up to 24h old). Add an optional free SAM.gov API key for real-time results.
 
-> This repo contains documentation and examples only. The Actor runs on Apify: **[open the Apify Store listing](https://apify.com/cce_partners/samgov-opportunity-radar)**.
+## Why this instead of SAM.gov saved searches?
+- **Only new or changed.** Each monitor remembers every notice it has seen and returns a notice again only when it's amended (deadline, description, award).
+- **No key required.** Keyless mode uses SAM.gov's official public nightly extract (up to 24h old). Add a key for real-time results.
+- **No personal contact data.** No names, emails or phone numbers, so the output is safe to share and store.
+- **Pay per result, no platform usage fees.** Unchanged notices are never charged.
 
-## What it does
-- **Returns changes only.** It remembers what each named monitor has already seen, so every run returns `new` and `changed` notices only (amendments, new deadlines, award details).
-- **Filters** by title keywords, NAICS codes, set-aside (8(a), HUBZone, SDVOSB, WOSB, EDWOSB, small business…), notice type (solicitation, presolicitation, sources sought, award…), place-of-performance state, agency code, and a lookback window of up to 364 days.
-- **Produces clean output** of 30+ flat columns that work well in spreadsheets and BI tools.
-- **Adds optional tags:** sector, set-aside category, stage (market research / open solicitation / award), days left to respond, and an optional AI one-line summary.
-- **Is private by design.** Contracting-officer names, emails, and phone numbers are dropped on purpose.
-- **Uses an official source.** It reads public U.S. government data through SAM.gov's own API. It is not a browser scraper.
+## Use cases
 
-## Who it's for
-- Small businesses and 8(a) / HUBZone / SDVOSB / WOSB firms looking for **federal contract opportunities**
-- Government contractors, BD teams, and capture managers who track NAICS codes
-- Proposal consultants and GovCon analysts building bid pipelines
-- Developers who want a **government contracts scraper** without maintaining SAM.gov API code
-
-## Example input
+### 1. 8(a) IT services firm: daily new solicitations
 ```json
 {
-  "samApiKey": "YOUR_OWN_SAM_GOV_PUBLIC_API_KEY",
-  "monitorName": "it-services-va",
-  "keywords": "cybersecurity",
-  "naicsCodes": ["541512", "541519"],
-  "setAside": "SBA",
-  "noticeTypes": ["o", "k", "r"],
-  "state": "VA",
+  "naicsCodes": ["541511", "541512", "541519"],
+  "setAside": "8A",
+  "noticeTypes": ["o", "k"],
   "lookbackDays": 7,
-  "maxItems": 1000,
+  "monitorName": "8a-it-daily"
+}
+```
+Schedule it daily and connect Google Sheets. Each morning you get only the new or amended IT solicitations.
+
+### 2. SDVOSB contractor: Texas construction bids and sources sought
+```json
+{
+  "naicsCodes": ["236220", "238210"],
+  "setAside": "SDVOSBC",
+  "state": "TX",
+  "noticeTypes": ["o", "p", "r"],
+  "lookbackDays": 14,
+  "monitorName": "sdvosb-tx-construction",
   "aiTagging": true
 }
 ```
-You need a free SAM.gov public API key (sam.gov → Account Details → Public API Key).
+Sources sought (`r`) and presolicitations (`p`) give you early warning before the RFP drops. Tags add the sector, set-aside category and days to respond.
 
-## Sample output fields
-| Field | Example |
-|---|---|
-| `noticeId` | `a1b2c3...` |
-| `title` | `Cybersecurity Support Services` |
-| `solicitationNumber` | `W91...-26-R-0001` |
-| `noticeType` / `baseType` | `Solicitation` |
-| `postedDate` / `responseDeadline` / `archiveDate` | ISO dates |
-| `department` / `subTier` / `office` | Agency hierarchy |
-| `naicsCode` / `pscCode` | `541512` / `D310` |
-| `setAsideCode` / `setAside` | `SBA` / `Total Small Business` |
-| `popCity` / `popState` / `popCountry` | Place of performance |
-| `awardDate` / `awardNumber` / `awardAmount` / `awardeeName` | Award notices only |
-| `samUrl` | Link to the notice on SAM.gov |
-| `changeType` | `new` or `changed` |
-| `tag_sector`, `tag_setAsideCategory`, `tag_stage`, `tag_daysToRespond`, `tag_summary` | When tagging is enabled |
+### 3. Capture team: cybersecurity across all agencies
+```json
+{
+  "keywords": "cybersecurity",
+  "noticeTypes": ["o", "k", "r"],
+  "lookbackDays": 30,
+  "maxItems": 2000,
+  "monitorName": "cyber-capture"
+}
+```
 
-There are no contact fields (no names, emails, or phone numbers).
+## Notice type codes
+o = Solicitation, p = Presolicitation, k = Combined Synopsis/Solicitation, r = Sources Sought, s = Special Notice, a = Award, u = J&A, g = Sale of Surplus, i = Intent to Bundle.
 
-## Pricing (pay per event)
-- **$0.01** per run
-- **$4.00 per 1,000** new or changed opportunities
-- **$2.00 per 1,000** AI-tagged opportunities (optional)
-
-You are never charged for unchanged notices. See the current pricing on the [Apify Store listing](https://apify.com/cce_partners/samgov-opportunity-radar).
-
-## How to set up daily federal contract alerts
-1. Open the [Actor on Apify](https://apify.com/cce_partners/samgov-opportunity-radar) and click **Try for free**.
-2. Paste your SAM.gov API key and set your filters.
-3. Add a **Schedule** (for example, daily at 7 AM) and an integration (Google Sheets, Slack, email, webhook).
+## Set-aside codes
+SBA (Total Small Business), SBP (Partial SB), 8A / 8AN (8(a)), HZC / HZS (HUBZone), SDVOSBC / SDVOSBS (Service-Disabled Veteran-Owned), WOSB / WOSBSS / EDWOSB / EDWOSBSS (Women-Owned), VSA / VSS (Veteran).
 
 ## FAQ
-**Is this a SAM.gov API alternative?** It is a managed wrapper around the official API. You skip the code, paging, deduplication, and change tracking.
-**Does it scrape SAM.gov pages?** No. It uses the official public Opportunities API.
-**Can I run several searches?** Yes. Give each one its own `monitorName`.
+**Do I need a SAM.gov API key?** No. Without a key the Actor uses SAM.gov's official public nightly extract, which can be up to 24 hours old. A free key (sam.gov → Account Details → Public API Key) gives you real-time results.
+
+**How does "only new or changed" work?** Each `monitorName` keeps a fingerprint of every notice it has seen. A notice is returned again only if it's amended. Turn on `resetState` to start fresh.
+
+**Can I run several searches?** Yes. Give each filter set its own `monitorName`.
+
+**Does it include contracting officer emails or phone numbers?** No, by design. Use the `samUrl` link to see contacts on SAM.gov.
+
+**How much does it cost?** $0.01 per run plus $4 per 1,000 new or changed opportunities, and $2 per 1,000 AI tags if you turn them on. A daily alert with 20 new notices costs about $0.09.
+
+**Can I use it from an AI agent?** Yes. Call it through the Apify MCP server or API. The output is flat JSON with stable fields such as `noticeId`, `title`, `responseDeadline` and `samUrl`.
+
+**Is this affiliated with SAM.gov or GSA?** No. It's an independent tool that uses SAM.gov's official public data.
+
+## Two data modes
+
+| | **Keyless (default when no key)** | **API key (recommended for real-time)** |
+|---|---|---|
+| Source | Official SAM.gov public nightly extract ([Data Services](https://sam.gov/data-services/Contract%20Opportunities/datagov?privacy=Public)) | SAM.gov Get Opportunities Public API |
+| Freshness | **Up to 24h old** (file regenerated nightly) | Real-time |
+| Setup | None | Free key: sam.gov > Account Details > Public API Key |
+| Daily quota | None from SAM.gov | Your key's daily limit |
+
+If you supply `samApiKey`, the Actor always uses the API. **Official public nightly extract, up to 24h old; add a free SAM.gov API key for real-time results.**
+
+We never scrape SAM.gov web pages. Keyless mode uses only the public bulk extract that SAM.gov publishes for download.
+
+### Field differences in keyless mode
+- `awardeeUei` is always empty (not in the extract).
+- `naicsCodes` (secondary NAICS list) is empty; `naicsCode` (primary) is present.
+- `popCity` has the name only, no city code.
+- `agencyPathCode` is built from CGAC / FPDS / AAC codes and may differ from the API's code path; `organizationCode` filtering is approximate.
+- `keywords` is a local case-insensitive title match (the API runs its own title search), so counts can differ slightly.
+- Covers notices currently in the extract (active notices, roughly the last year), latest version only.
+
+## Output
+Same columns in both modes: noticeId, title, solicitationNumber, noticeType, baseType, active, postedDate, responseDeadline, archiveDate, department, subTier, office, agencyPathCode, naicsCode, pscCode, setAsideCode, setAside, office/place-of-performance location, award fields, samUrl, additionalInfoUrl, changeType, optional tag_* columns. No contact names, emails or phones, in either mode.
+
+## Cost
+A keyless test run with 512 MB memory and maxItems 10 took about 6 s and cost about $0.0003 in platform usage.
+
+## Companion tools
+- **[SEC Form D New Raises Feed](https://apify.com/cce_partners/sec-form-d-new-raises-feed)**: new private fundraising filings from SEC Form D.
+- **GovCon Recompete Radar** (coming soon): spot expiring federal contracts before they're recompeted.
 
 ---
-Published by [CCE Partners](https://apify.com/cce_partners). Not affiliated with GSA or SAM.gov.
-**→ [SAM.gov Opportunity Radar on Apify Store](https://apify.com/cce_partners/samgov-opportunity-radar)**
+**Get started:** https://apify.com/cce_partners/samgov-opportunity-radar
