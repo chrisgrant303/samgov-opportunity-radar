@@ -1,5 +1,7 @@
 # SAM.gov Scraper – New Federal Contract Opportunity Alerts
 
+> Part of the **GovCon Data Suite**, which covers SAM.gov alerts, expiring federal contracts (recompetes) and SEC Form D raises: https://github.com/chrisgrant303/govcon-data-suite
+
 [![Run on Apify](https://img.shields.io/badge/Run%20on-Apify-blue)](https://apify.com/cce_partners/samgov-opportunity-radar)
 
 👉 **Run it now on Apify: https://apify.com/cce_partners/samgov-opportunity-radar**
